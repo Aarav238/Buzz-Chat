@@ -33,7 +33,9 @@ app.use("/api/messages", messageRoutes);
 
 
 
-
+app.get("/", (req, res) => {
+    res.send("Hello World!");
+  });
 
 
 
