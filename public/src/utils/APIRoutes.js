@@ -1,6 +1,6 @@
 // export const host = "http://localhost:5000";
 //export const host = "https://chat-app-aarav.herokuapp.com";
-export const host = "https://buzz-chat-um1v.onrender.com";
+export const host = "https://buzz-server-jg7t.onrender.com";
 
 export const registerRoute = `${host}/api/auth/register`;
 export const loginRoute = `${host}/api/auth/login`;
