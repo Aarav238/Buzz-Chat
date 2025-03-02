@@ -63,18 +63,36 @@ export default function SetAvatar() {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log("fetchdata called");
       const data = [];
-      // foreach doesn't work with APIs
-      for (let i = 0; i < 4; i++) {
-        const image = await axios.get(
-          `${api}/${Math.round(Math.random() * 1000)}`
-        );
-        const buffer = new Buffer(image.data);
-        data.push(buffer.toString("base64"));
-      }
+      
+      try {
+        const genders = ['male', 'male', 'female', 'female'];
+        // Using DiceBear API instead of Multiavatar
+        for (let i = 0; i < 4; i++) {
+          console.log(i);
+          // DiceBear offers various collections like 'avataaars', 'bottts', 'identicon', 'micah', etc.
+          const style = "avataaars"; // You can change this to any other style
+          const randomSeed = Math.round(Math.random() * 10000);
+          const gender = genders[i];
 
-      setAvatars(data);
-      setIsLoading(false);
+          const response = await axios.get(
+            `https://api.dicebear.com/7.x/${style}/svg?seed=${randomSeed}&gender=${gender}`,
+            { responseType: 'arraybuffer' }
+          );
+          
+          console.log("Avatar fetched for seed:", randomSeed);
+          const buffer = Buffer.from(response.data, 'binary');
+          data.push(buffer.toString("base64"));
+          console.log(data);
+        }
+        
+        setAvatars(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching avatars:", error);
+        setIsLoading(false);
+      }
     };
 
     fetchData();
