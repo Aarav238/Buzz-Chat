@@ -1,6 +1,7 @@
 {
-  "buildCommand": "cd public && yarn install && CI=false yarn build",
-  "outputDirectory": "public/build",
+  "version": 2,
+  "buildCommand": "CI=false yarn build",
+  "outputDirectory": "build",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
