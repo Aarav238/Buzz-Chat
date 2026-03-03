@@ -1,34 +1,45 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import styled from 'styled-components';
-import {BiPowerOff} from 'react-icons/bi'
+import { BiPowerOff } from 'react-icons/bi';
 
 export default function Logout() {
-    const navigate = useNavigate();
-    const handleClick = async () => {
-        localStorage.clear();
-        navigate("/login");
-    }
+  const navigate = useNavigate();
+  const handleClick = () => {
+    localStorage.clear();
+    navigate("/login");
+  }
   return (
-    <Button onClick={handleClick}>
-        <BiPowerOff />
-    </Button>
+    <Btn onClick={handleClick} title="Sign out">
+      <BiPowerOff />
+    </Btn>
   )
 }
 
-const Button  = styled.div`
-display: flex;
-justify-content: center;
-align-items: center;
-padding: 0.5rem;
-border-radius: 50% ;
-background-color: #9a86f3;
-border: none;
-cursor: pointer;
-svg{
-    font-size: 1.3rem;
-    color: #ebe7ff ;
-}
+const Btn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.15);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
 
+  svg {
+    font-size: 14px;
+    color: #F87171;
+  }
+
+  &:hover {
+    background: rgba(239,68,68,0.18);
+    border-color: rgba(239,68,68,0.35);
+    box-shadow: 0 0 12px rgba(239,68,68,0.2);
+    transform: scale(1.07);
+  }
+
+  &:active { transform: scale(0.95); }
 `;
