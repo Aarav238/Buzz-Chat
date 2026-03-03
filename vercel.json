@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd public && yarn install && yarn build",
+  "outputDirectory": "public/build",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
