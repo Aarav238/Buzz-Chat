@@ -12,6 +12,8 @@ const app = express();
 const socket  = require("socket.io");
 require("dotenv").config();
 
+// Trust reverse proxy (Render, Vercel, etc.) so req.ip returns the real client IP
+app.set("trust proxy", 1);
 
 const allowedOrigins = process.env.ORIGIN
   ? process.env.ORIGIN.split(",").map(o => o.trim())
@@ -22,6 +24,18 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+
+// API request logger
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const ms = Date.now() - start;
+    const ip = req.ip || req.socket.remoteAddress || "-";
+    const time = new Date().toISOString();
+    console.log(`[${time}] ${req.method} ${req.originalUrl} ${res.statusCode} ${ms}ms — ${ip}`);
+  });
+  next();
+});
 
 
 

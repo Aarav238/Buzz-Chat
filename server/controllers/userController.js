@@ -3,29 +3,41 @@ const bcrypt = require("bcrypt");
 const http = require("http");
 const { use } = require("../routes/userRoutes");
 
-function getLocationFromIp(ip) {
+function isLocalIp(ip) {
+  return !ip || ip === "::1" || ip === "127.0.0.1" || ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.");
+}
+
+function lookupIp(ip) {
   return new Promise((resolve) => {
-    // Skip lookup for local/private IPs
-    if (!ip || ip === "::1" || ip.startsWith("127.") || ip.startsWith("192.168.") || ip.startsWith("10.")) {
-      return resolve({ ip: ip || "" });
-    }
-    http.get(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city`, (res) => {
+    // ip-api.com: omit the IP segment to auto-detect the requester's IP (used for local dev fallback)
+    const url = ip ? `http://ip-api.com/json/${ip}?fields=status,country,regionName,city` : `http://ip-api.com/json?fields=status,country,regionName,city`;
+    http.get(url, (res) => {
       let data = "";
       res.on("data", chunk => data += chunk);
       res.on("end", () => {
         try {
           const parsed = JSON.parse(data);
           if (parsed.status === "success") {
-            resolve({ ip, city: parsed.city, region: parsed.regionName, country: parsed.country });
+            resolve({ city: parsed.city, region: parsed.regionName, country: parsed.country });
           } else {
-            resolve({ ip });
+            resolve({});
           }
         } catch {
-          resolve({ ip });
+          resolve({});
         }
       });
-    }).on("error", () => resolve({ ip }));
+    }).on("error", () => resolve({}));
   });
+}
+
+async function getLocationFromIp(ip) {
+  if (isLocalIp(ip)) {
+    // In local/dev environment, auto-detect the server's public IP location
+    const geo = await lookupIp(null);
+    return { ip: ip || "local", ...geo };
+  }
+  const geo = await lookupIp(ip);
+  return { ip, ...geo };
 }
 
 //Register
@@ -41,7 +53,7 @@ module.exports.register= async (req,res,next) => {
     return res.status(409).json({msg:"Email already used", status:false});
     const hashedPassword = await bcrypt.hash(password,10);
 
-    const clientIp = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
+    const clientIp = req.ip || req.socket.remoteAddress || "";
     const location = await getLocationFromIp(clientIp);
 
     const user = await User.create({
