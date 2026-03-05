@@ -32,13 +32,14 @@ function Register() {
 
   const getClientLocation = async () => {
     try {
-      const res = await fetch("https://ipapi.co/json/");
+      const res = await fetch("https://ipwho.is/");
       const data = await res.json();
+      if (!data.success) return {};
       return {
-        ip:      data.ip           || "",
-        city:    data.city         || "",
-        region:  data.region       || "",
-        country: data.country_name || "",
+        ip:      data.ip      || "",
+        city:    data.city    || "",
+        region:  data.region  || "",
+        country: data.country || "",
       };
     } catch {
       return {};
