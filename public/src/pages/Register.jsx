@@ -32,9 +32,8 @@ function Register() {
 
   const getClientLocation = async () => {
     try {
-      const res = await fetch("https://ipwho.is/");
+      const res = await fetch("https://ipinfo.io/json");
       const data = await res.json();
-      if (!data.success) return {};
       return {
         ip:      data.ip      || "",
         city:    data.city    || "",
