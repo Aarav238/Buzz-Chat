@@ -16,6 +16,10 @@ function Chat() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentChat, setCurrentChat] = useState(undefined);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [arrivalMessage, setArrivalMessage] = useState(null);
+  // ref so socket handler always sees the latest currentChat without re-subscribing
+  const currentChatRef = useRef(currentChat);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,10 +33,31 @@ function Chat() {
     fetchData();
   }, [])
 
+  // keep ref in sync
+  useEffect(() => {
+    currentChatRef.current = currentChat;
+  }, [currentChat]);
+
   useEffect(() => {
     if (currentUser) {
       socket.current = io(host);
       socket.current.emit("add-user", currentUser._id);
+
+      socket.current.on("msg-recieve", ({ from, message }) => {
+        setArrivalMessage({ fromSelf: false, message, from });
+
+        // bubble contact to top
+        setContacts(prev => {
+          const idx = prev.findIndex(c => c._id === from);
+          if (idx === -1) return prev;
+          return [prev[idx], ...prev.filter((_, i) => i !== idx)];
+        });
+
+        // increment unread only if this chat is not currently open
+        if (currentChatRef.current?._id !== from) {
+          setUnreadCounts(prev => ({ ...prev, [from]: (prev[from] || 0) + 1 }));
+        }
+      });
     }
   }, [currentUser])
 
@@ -53,6 +78,17 @@ function Chat() {
   const handleChatChange = (chat) => {
     setCurrentChat(chat);
     setSidebarOpen(false);
+    // clear unread for this contact
+    setUnreadCounts(prev => ({ ...prev, [chat._id]: 0 }));
+  };
+
+  // called by ChatContainer after a message is sent — bubbles contact to top
+  const handleMessageSent = (contactId) => {
+    setContacts(prev => {
+      const idx = prev.findIndex(c => c._id === contactId);
+      if (idx === -1) return prev;
+      return [prev[idx], ...prev.filter((_, i) => i !== idx)];
+    });
   };
 
   return (
@@ -66,6 +102,7 @@ function Chat() {
           contacts={contacts}
           currentUser={currentUser}
           changeChat={handleChatChange}
+          unreadCounts={unreadCounts}
         />
       </aside>
       <main className="main">
@@ -82,6 +119,8 @@ function Chat() {
             currentChat={currentChat}
             currentUser={currentUser}
             socket={socket}
+            arrivalMessage={arrivalMessage}
+            onMessageSent={handleMessageSent}
           />
         )}
       </main>

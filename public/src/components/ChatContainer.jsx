@@ -6,9 +6,8 @@ import ChatInput from './ChatInput';
 import axios from 'axios';
 import { v4 as uuidv4 } from "uuid";
 
-export default function ChatContainer({ currentChat, currentUser, socket }) {
+export default function ChatContainer({ currentChat, currentUser, socket, arrivalMessage, onMessageSent }) {
   const [messages, setMessages] = useState([]);
-  const [arrivalMessage, setArrivalMessage] = useState(null);
   const scrollRef = useRef();
 
   useEffect(() => {
@@ -36,18 +35,14 @@ export default function ChatContainer({ currentChat, currentUser, socket }) {
       message: msg,
     });
     setMessages(prev => [...prev, { fromSelf: true, message: msg }]);
+    onMessageSent(currentChat._id);
   };
 
+  // only apply arrival messages that belong to the current chat
   useEffect(() => {
-    if (socket.current) {
-      socket.current.on("msg-recieve", (msg) => {
-        setArrivalMessage({ fromSelf: false, message: msg });
-      });
+    if (arrivalMessage && arrivalMessage.from === currentChat?._id) {
+      setMessages(prev => [...prev, { fromSelf: false, message: arrivalMessage.message }]);
     }
-  }, []);
-
-  useEffect(() => {
-    arrivalMessage && setMessages(prev => [...prev, arrivalMessage]);
   }, [arrivalMessage]);
 
   useEffect(() => {

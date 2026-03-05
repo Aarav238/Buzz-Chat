@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import BuzzLogo from './BuzzLogo';
 import Logout from './Logout';
 
-export default function Contacts({ contacts, currentUser, changeChat }) {
+export default function Contacts({ contacts, currentUser, changeChat, unreadCounts = {} }) {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserImage, setCurrentUserImage] = useState(undefined);
   const [currentSelected, setCurrentSelected] = useState(undefined);
@@ -64,6 +64,11 @@ export default function Contacts({ contacts, currentUser, changeChat }) {
                 <div className="info">
                   <span className="name">{contact.username}</span>
                 </div>
+                {unreadCounts[contact._id] > 0 && (
+                  <div className="badge">
+                    {unreadCounts[contact._id] > 99 ? '99+' : unreadCounts[contact._id]}
+                  </div>
+                )}
               </div>
             ))}
             {filteredContacts.length === 0 && (
@@ -231,6 +236,21 @@ const Container = styled.div`
           overflow: hidden;
           text-overflow: ellipsis;
         }
+      }
+
+      .badge {
+        flex-shrink: 0;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        background: var(--gradient-brand);
+        border-radius: 99px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: #fff;
       }
     }
   }
