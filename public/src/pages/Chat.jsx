@@ -2,11 +2,19 @@ import React, { useState, useEffect, useRef } from 'react'
 import styled from 'styled-components';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { allUsersRoutes, host } from '../utils/APIRoutes';
+import { allUsersRoutes, host, subscribePushRoute, VAPID_PUBLIC_KEY } from '../utils/APIRoutes';
 import Contacts from '../components/Contacts';
 import Welcome from '../components/Welcome';
 import ChatContainer from '../components/ChatContainer';
 import { io } from "socket.io-client";
+import notifSound from '../assets/fahhhhh.mp3';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
 
 function Chat() {
   const socket = useRef();
@@ -18,8 +26,11 @@ function Chat() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [arrivalMessage, setArrivalMessage] = useState(null);
-  // ref so socket handler always sees the latest currentChat without re-subscribing
+  // refs so socket handler always sees latest values without re-subscribing
   const currentChatRef = useRef(currentChat);
+  const contactsRef = useRef([]);
+  const isTabVisible = useRef(true);
+  const totalUnreadRef = useRef(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,10 +44,47 @@ function Chat() {
     fetchData();
   }, [])
 
-  // keep ref in sync
+  // keep refs in sync
+  useEffect(() => { currentChatRef.current = currentChat; }, [currentChat]);
+  useEffect(() => { contactsRef.current = contacts; }, [contacts]);
+
+  // tab visibility tracking + title reset
   useEffect(() => {
-    currentChatRef.current = currentChat;
-  }, [currentChat]);
+    const handleVisibility = () => {
+      isTabVisible.current = document.visibilityState === 'visible';
+      if (isTabVisible.current) {
+        document.title = 'Buzz Chat';
+        totalUnreadRef.current = 0;
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
+  // request notification permission + register push subscription
+  useEffect(() => {
+    if (!currentUser) return;
+    const setup = async () => {
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+      if (permission !== 'granted') return;
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        const subscription = existing || await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+        await axios.post(subscribePushRoute, { userId: currentUser._id, subscription });
+      } catch (err) {
+        console.error('Push setup failed:', err);
+      }
+    };
+    setup();
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser) {
@@ -53,9 +101,31 @@ function Chat() {
           return [prev[idx], ...prev.filter((_, i) => i !== idx)];
         });
 
+        const isChatOpen = currentChatRef.current?._id === from;
+
         // increment unread only if this chat is not currently open
-        if (currentChatRef.current?._id !== from) {
+        if (!isChatOpen) {
           setUnreadCounts(prev => ({ ...prev, [from]: (prev[from] || 0) + 1 }));
+
+          // play sound
+          const audio = new Audio(notifSound);
+          audio.volume = 0.5;
+          audio.play().catch(() => {});
+
+          // update tab title
+          totalUnreadRef.current += 1;
+          document.title = `(${totalUnreadRef.current}) Buzz Chat`;
+
+          // browser notification when tab is not visible
+          if (!isTabVisible.current && Notification.permission === 'granted') {
+            const sender = contactsRef.current.find(c => c._id === from);
+            new Notification(sender?.username || 'Buzz Chat', {
+              body: message,
+              icon: '/favicon.svg',
+              tag: from,
+              renotify: true,
+            });
+          }
         }
       });
     }
@@ -78,8 +148,10 @@ function Chat() {
   const handleChatChange = (chat) => {
     setCurrentChat(chat);
     setSidebarOpen(false);
-    // clear unread for this contact
     setUnreadCounts(prev => ({ ...prev, [chat._id]: 0 }));
+    // reset tab title if no other unread chats remain
+    totalUnreadRef.current = 0;
+    document.title = 'Buzz Chat';
   };
 
   // called by ChatContainer after a message is sent — bubbles contact to top

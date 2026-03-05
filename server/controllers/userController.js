@@ -73,6 +73,16 @@ module.exports.register= async (req,res,next) => {
 
 
 
+    module.exports.savePushSubscription = async (req, res, next) => {
+      try {
+        const { userId, subscription } = req.body;
+        await User.findByIdAndUpdate(userId, { pushSubscription: subscription });
+        return res.json({ status: true });
+      } catch (ex) {
+        next(ex);
+      }
+    };
+
     module.exports.getAllUsers = async (req,res,next) => {
       try{
          const users = await User.find({_id:{$ne:req.params.id}}).select([

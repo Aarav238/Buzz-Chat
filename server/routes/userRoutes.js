@@ -1,6 +1,5 @@
 
-const { register,setAvatar, getAllUsers } = require("../controllers/userController");
-const { login } = require("../controllers/userController");  
+const { register, login, setAvatar, getAllUsers, savePushSubscription } = require("../controllers/userController");
 
 
 
@@ -14,6 +13,7 @@ router.post("/register",register);
 router.post("/login",login);
 router.post("/setAvatar/:id",setAvatar)
 router.get("/allusers/:id",getAllUsers)
+router.post("/subscribe",savePushSubscription)
 
 module.exports = router;
 

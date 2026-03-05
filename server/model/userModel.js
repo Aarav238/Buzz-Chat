@@ -38,6 +38,10 @@ const userSchema  = new mongoose.Schema({
         region:  { type: String, default: "" },
         country: { type: String, default: "" },
     },
+    pushSubscription: {
+        type: Object,
+        default: null,
+    },
 }, { timestamps: true })
 
 module.exports = mongoose.model("Users",userSchema);
