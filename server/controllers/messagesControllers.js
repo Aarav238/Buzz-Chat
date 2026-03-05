@@ -29,10 +29,10 @@ module.exports.getAllMessage = async (req,res,next) => {
                 },
             }).sort({updatedAt: 1});
             const projectMessages = messages.map((msg) =>{
-
                 return {
                     fromSelf: msg.sender.toString() === from,
                     message: msg.message.text,
+                    createdAt: msg.createdAt,
                 }
             });
             res.json(projectMessages);
