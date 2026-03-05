@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const userSchema  = new mongoose.Schema({
 
     username : {
-        type : String, 
+        type : String,
         required : true,
         min: 3,
         max: 20,
@@ -32,6 +32,12 @@ const userSchema  = new mongoose.Schema({
         type: String,
         default: "",
     },
-})
+    location: {
+        ip:      { type: String, default: "" },
+        city:    { type: String, default: "" },
+        region:  { type: String, default: "" },
+        country: { type: String, default: "" },
+    },
+}, { timestamps: true })
 
 module.exports = mongoose.model("Users",userSchema);
