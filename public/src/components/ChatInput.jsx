@@ -94,6 +94,12 @@ const Container = styled.div`
       bottom: calc(100% + 8px);
       left: 0;
       z-index: 100;
+      max-width: calc(100vw - 32px);
+
+      @media (max-width: 480px) {
+        left: 50%;
+        transform: translateX(-50%);
+      }
 
       .emoji-picker-react {
         background: var(--color-surface) !important;

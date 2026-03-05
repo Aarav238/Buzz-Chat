@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { getAllMessagesRoute, sendMessageRoute } from "../utils/APIRoutes"
-import Logout from './Logout';
 import ChatInput from './ChatInput';
 import axios from 'axios';
 import { v4 as uuidv4 } from "uuid";
@@ -27,7 +26,7 @@ const isSameDay = (a, b) => {
   return new Date(a).toDateString() === new Date(b).toDateString();
 };
 
-export default function ChatContainer({ currentChat, currentUser, socket, arrivalMessage, onMessageSent }) {
+export default function ChatContainer({ currentChat, currentUser, socket, arrivalMessage, onMessageSent, onBack }) {
   const [messages, setMessages] = useState([]);
   const scrollRef = useRef();
 
@@ -76,6 +75,11 @@ export default function ChatContainer({ currentChat, currentUser, socket, arriva
         <Container>
           <div className="chat-header">
             <div className="user-details">
+              {onBack && (
+                <button className="back-btn" onClick={onBack} aria-label="Back">
+                  <BackIcon />
+                </button>
+              )}
               <div className="avatar">
                 <img
                   src={`data:image/svg+xml;base64,${currentChat.avatarImage}`}
@@ -86,7 +90,6 @@ export default function ChatContainer({ currentChat, currentUser, socket, arriva
                 <h3 className="username">{currentChat.username}</h3>
               </div>
             </div>
-            <Logout />
           </div>
 
           <div className="chat-messages">
@@ -117,6 +120,14 @@ export default function ChatContainer({ currentChat, currentUser, socket, arriva
   )
 }
 
+function BackIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5M12 5l-7 7 7 7" />
+    </svg>
+  );
+}
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -138,6 +149,25 @@ const Container = styled.div`
       display: flex;
       align-items: center;
       gap: 12px;
+
+      .back-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        border-radius: 50%;
+        color: var(--color-text-2);
+        transition: background 0.2s, color 0.2s;
+        flex-shrink: 0;
+
+        &:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+        @media (max-width: 768px) { display: flex; }
+      }
 
       .avatar img {
         width: 38px;

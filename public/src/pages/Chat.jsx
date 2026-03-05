@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import styled from 'styled-components';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { allUsersRoutes, host, subscribePushRoute, VAPID_PUBLIC_KEY } from '../utils/APIRoutes';
+import { allUsersRoutes, host, subscribePushRoute } from '../utils/APIRoutes';
+
+const VAPID_PUBLIC_KEY = "BHzLgLhdWnqeSNssT-YGUrYhRtMsijIxSoZgfLNMcZYEQF0X8QmtPQ7JCaqccDvj-jgUWfbH7Mx6RIyMKbZ9MK4";
 import Contacts from '../components/Contacts';
 import Welcome from '../components/Welcome';
 import ChatContainer from '../components/ChatContainer';
@@ -23,7 +25,6 @@ function Chat() {
   const [currentUser, setCurrentUser] = useState(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentChat, setCurrentChat] = useState(undefined);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [arrivalMessage, setArrivalMessage] = useState(null);
   // refs so socket handler always sees latest values without re-subscribing
@@ -147,9 +148,7 @@ function Chat() {
 
   const handleChatChange = (chat) => {
     setCurrentChat(chat);
-    setSidebarOpen(false);
     setUnreadCounts(prev => ({ ...prev, [chat._id]: 0 }));
-    // reset tab title if no other unread chats remain
     totalUnreadRef.current = 0;
     document.title = 'Buzz Chat';
   };
@@ -165,11 +164,7 @@ function Chat() {
 
   return (
     <Container>
-      <div
-        className={`overlay ${sidebarOpen ? 'visible' : ''}`}
-        onClick={() => setSidebarOpen(false)}
-      />
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${!currentChat ? 'open' : ''}`}>
         <Contacts
           contacts={contacts}
           currentUser={currentUser}
@@ -178,12 +173,6 @@ function Chat() {
         />
       </aside>
       <main className="main">
-        <div className="mobile-bar">
-          <button className="hamburger" onClick={() => setSidebarOpen(true)}>
-            <span /><span /><span />
-          </button>
-          <span className="mobile-title">Buzz Chat</span>
-        </div>
         {isLoaded && currentChat === undefined ? (
           <Welcome currentUser={currentUser} />
         ) : (
@@ -193,6 +182,7 @@ function Chat() {
             socket={socket}
             arrivalMessage={arrivalMessage}
             onMessageSent={handleMessageSent}
+            onBack={() => setCurrentChat(undefined)}
           />
         )}
       </main>
@@ -201,49 +191,33 @@ function Chat() {
 }
 
 const Container = styled.div`
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
   display: flex;
   background: var(--color-bg);
   overflow: hidden;
   position: relative;
 
-  .overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 10;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-
-    @media (max-width: 768px) {
-      display: block;
-      &.visible {
-        opacity: 1;
-        pointer-events: all;
-      }
-    }
-  }
-
   .sidebar {
     width: 280px;
     flex-shrink: 0;
-    height: 100vh;
+    height: 100dvh;
     background: var(--color-sidebar);
     border-right: 1px solid var(--border);
     z-index: 20;
-    transition: transform 0.25s ease;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 
     @media (max-width: 768px) {
       position: fixed;
       left: 0;
       top: 0;
+      width: 100vw;
+      height: 100dvh;
       transform: translateX(-100%);
+      border-right: none;
+
       &.open {
         transform: translateX(0);
-        box-shadow: 4px 0 32px rgba(0,0,0,0.5);
       }
     }
   }
@@ -253,50 +227,11 @@ const Container = styled.div`
     display: flex;
     flex-direction: column;
     overflow: hidden;
-  }
+    min-width: 0;
 
-  .mobile-bar {
-    display: none;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: var(--color-sidebar);
-    border-bottom: 1px solid var(--border);
-
-    @media (max-width: 768px) { display: flex; }
-
-    .mobile-title {
-      font-size: 15px;
-      font-weight: 600;
-      background: var(--gradient-brand);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hamburger {
-      width: 34px;
-      height: 34px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      border-radius: 8px;
-      transition: background 0.2s;
-
-      &:hover { background: var(--color-surface-2); }
-
-      span {
-        display: block;
-        width: 20px;
-        height: 2px;
-        background: var(--color-text-2);
-        border-radius: 2px;
-      }
+    @media (max-width: 768px) {
+      width: 100vw;
+      height: 100dvh;
     }
   }
 `;
