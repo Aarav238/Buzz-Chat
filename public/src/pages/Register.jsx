@@ -30,13 +30,29 @@ function Register() {
     if (localStorage.getItem("chat-app-user")) navigate("/");
   }, []);
 
+  const getClientLocation = async () => {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+      return {
+        ip:      data.ip           || "",
+        city:    data.city         || "",
+        region:  data.region       || "",
+        country: data.country_name || "",
+      };
+    } catch {
+      return {};
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (handleValidation()) {
       setLoading(true)
       try {
         const { password, username, email } = values;
-        const { data } = await axios.post(registerRoute, { username, email, password });
+        const location = await getClientLocation();
+        const { data } = await axios.post(registerRoute, { username, email, password, location });
         localStorage.setItem('chat-app-user', JSON.stringify(data.user));
         navigate("/");
       } catch (err) {
