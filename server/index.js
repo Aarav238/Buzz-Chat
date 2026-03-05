@@ -27,7 +27,8 @@ app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    dbName: "buzzChat",
 }).then(()=> {
     console.log("DB connection successfull");
 }).catch((err)=> {
