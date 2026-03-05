@@ -3,13 +3,13 @@ import styled from 'styled-components';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { allUsersRoutes, host, subscribePushRoute } from '../utils/APIRoutes';
-
-const VAPID_PUBLIC_KEY = "BHzLgLhdWnqeSNssT-YGUrYhRtMsijIxSoZgfLNMcZYEQF0X8QmtPQ7JCaqccDvj-jgUWfbH7Mx6RIyMKbZ9MK4";
 import Contacts from '../components/Contacts';
 import Welcome from '../components/Welcome';
 import ChatContainer from '../components/ChatContainer';
 import { io } from "socket.io-client";
 import notifSound from '../assets/fahhhhh.mp3';
+
+const VAPID_PUBLIC_KEY = "BHzLgLhdWnqeSNssT-YGUrYhRtMsijIxSoZgfLNMcZYEQF0X8QmtPQ7JCaqccDvj-jgUWfbH7Mx6RIyMKbZ9MK4";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
